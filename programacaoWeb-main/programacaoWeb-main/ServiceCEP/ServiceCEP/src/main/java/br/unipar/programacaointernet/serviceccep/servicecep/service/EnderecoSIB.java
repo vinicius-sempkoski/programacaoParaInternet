@@ -19,13 +19,48 @@ public class EnderecoSIB implements EnderecoSEI {
     }
 
     @Override
-    public Endereco consultaCEP(String cep) {
+    public List<Endereco> consultaTodosEnderecos() {
         EnderecoDAO enderecoDAO = new EnderecoDAOImpl(EntityManagerUtil.getManager());
 
-        Endereco endereco = enderecoDAO.findByCep(cep);
+        List<Endereco> enderecos = enderecoDAO.findAll();
 
-        return endereco;
+        return enderecos;
     }
+
+    @Override
+    public Endereco consultaCep(String cep) {
+        EnderecoDAO enderecoDAO = new EnderecoDAOImpl(EntityManagerUtil.getManager());
+
+        try {
+            Endereco endereco = enderecoDAO.findByCep(cep);
+            return endereco;
+        } catch (NoResultException n) {
+            try {
+                URL url = new URL("http://viacep.com.br/ws/" +  cep.replace("-",
+                        "").replace(".", "") + "/xml/");
+
+                BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()));
+
+                String inputLine;
+                String result = "";
+
+                while ((inputLine = in.readLine()) != null)
+                    result += inputLine;
+
+                in.close();
+                Endereco endereco = new Endereco();
+                endereco = Endereco.unmarshalFromString(result);
+
+                enderecoDAO.save(endereco);
+                return endereco;
+            } catch (Exception a) {
+                return null;
+            }
+        }
+
+
+    }
+
     @Override
     public String salvaEndereco(String cep) {
         EnderecoDAO enderecoDAO = new EnderecoDAOImpl(EntityManagerUtil.getManager());
@@ -44,9 +79,9 @@ public class EnderecoSIB implements EnderecoSEI {
 
             in.close();
             Endereco endereco = new Endereco();
-//            endereco = Endereco.unmarshalFromString(endereco);
-//            endereco.toString();
+            endereco = Endereco.unmarshalFromString(result);
 
+            System.out.println(endereco);
             enderecoDAO.save(endereco);
 
             return "Endereço " + endereco.getCep() + " salvo com sucesso!";
@@ -54,60 +89,49 @@ public class EnderecoSIB implements EnderecoSEI {
             return "Erro ao salvar endereço";
         }
     }
+
     @Override
-    public String deletarEndereco(String cep) {
+    public String editaEndereco(Long idEndereco, String cep, String logradouro, String complemento, String bairro, String localidade, String uf, String ibge, String gia, String ddd, String siafi) {
+        EnderecoDAO enderecoDAO = new EnderecoDAOImpl(EntityManagerUtil.getManager());
+
+        Endereco endereco = enderecoDAO.findById(idEndereco);
+
+        endereco.setComplemento(complemento);
+        endereco.setCep(cep);
+        endereco.setLogradouro(logradouro);
+        endereco.setComplemento(complemento);
+        endereco.setBairro(bairro);
+        endereco.setLocalidade(localidade);
+        endereco.setUf(uf);
+        endereco.setIbge(ibge);
+        endereco.setGia(gia);
+        endereco.setDdd(ddd);
+        endereco.setSiafi(siafi);
+
+        enderecoDAO.update(endereco);
+
+        return "Endereço " + endereco.getCep() + " editado com sucesso!";
+    }
+
+    @Override
+    public String deletaEnderecoByCep(String cep) {
         EnderecoDAO enderecoDAO = new EnderecoDAOImpl(EntityManagerUtil.getManager());
 
         Endereco endereco = enderecoDAO.findByCep(cep);
 
         enderecoDAO.delete(endereco);
 
-        return "sucesso" + endereco.getCep();
+        return "Endereço " + endereco.getCep() + " deletado com sucesso!";
     }
+
     @Override
-    public Endereco consultaCep(String cep) {
+    public String deletaEndereco(Long idEndereco) {
         EnderecoDAO enderecoDAO = new EnderecoDAOImpl(EntityManagerUtil.getManager());
 
-        try {
-            Endereco endereco = enderecoDAO.findByCep(cep);
+        Endereco endereco = enderecoDAO.findById(idEndereco);
 
-            return endereco;
-        } catch (Exception e) {
-            try {
-                URL url = new URL("http://viacep.com.br/ws/" +  cep.replace("-",
-                        "").replace(".", "") + "/xml/");
+        enderecoDAO.delete(endereco);
 
-                BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()));
-
-                String inputLine;
-                String result = "";
-
-                while ((inputLine = in.readLine()) != null)
-                    result += inputLine;
-
-                in.close();
-                Endereco endereco = new Endereco();
-//            endereco = Endereco.unmarshalFromString(endereco);
-//            endereco.toString();
-
-                enderecoDAO.save(endereco);
-
-                return endereco;
-            } catch (Exception a) {
-                Endereco endereco = new Endereco();
-                return endereco;
-            }
-        }
+        return "Endereço " + endereco.getCep() + " deletado com sucesso!";
     }
-    @Override
-    public String editarUsuario(String cep) {
-        EnderecoDAO enderecoDAO = new EnderecoDAOImpl(EntityManagerUtil.getManager());
-
-        Endereco endereco = enderecoDAO.findByCep(cep);
-
-        endereco.setComplemento(complemento);
-
-        enderecoDAO.update(endereco);
-
-        return "Endereço " + endereco.getCep() + " editado com sucesso!";    }
 }
