@@ -7,7 +7,7 @@ import jakarta.jws.WebService;
 
 @WebService
 public interface EnderecoSEI {
- @WebMethod
+   @WebMethod
   Endereco consultaEndereco(@WebParam(name = "idEndereco") Long idEndereco);
 
   @WebMethod
