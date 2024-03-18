@@ -27,6 +27,34 @@ public class EnderecoSIB implements EnderecoSEI {
         return endereco;
     }
     @Override
+    public String salvaEndereco(String cep) {
+        EnderecoDAO enderecoDAO = new EnderecoDAOImpl(EntityManagerUtil.getManager());
+
+        try {
+            URL url = new URL("http://viacep.com.br/ws/" +  cep.replace("-",
+                    "").replace(".", "") + "/xml/");
+
+            BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()));
+
+            String inputLine;
+            String result = "";
+
+            while ((inputLine = in.readLine()) != null)
+                result += inputLine;
+
+            in.close();
+            Endereco endereco = new Endereco();
+//            endereco = Endereco.unmarshalFromString(endereco);
+//            endereco.toString();
+
+            enderecoDAO.save(endereco);
+
+            return "Endereço " + endereco.getCep() + " salvo com sucesso!";
+        } catch (Exception e) {
+            return "Erro ao salvar endereço";
+        }
+    }
+    @Override
     public String deletarEndereco(String cep) {
         EnderecoDAO enderecoDAO = new EnderecoDAOImpl(EntityManagerUtil.getManager());
 
