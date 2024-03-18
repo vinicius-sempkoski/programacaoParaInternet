@@ -22,6 +22,13 @@ public class UsuarioSIB implements UsuarioSEI{
         Usuario usuario = usuarioDAO.findById(idUsuario);
         return usuario;
     }
+    @Override
+    public List<Usuario> consultaUsuarios() {
+        UsuarioDAO usuarioDAO = new UsuarioDAOImpl(EntityManagerUtil.getManager());
+
+        List<Usuario> usuarios = usuarioDAO.findAll();
+        return usuarios;
+    }
 
     @Override
     public String salvarUsuario(String nome, String login, String senha) {
